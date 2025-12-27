@@ -1,17 +1,17 @@
 {
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "hive-marketplace",
+  "version": "1.0.0",
+  "description": "Hive multi-instance orchestration plugin",
   "owner": {
-    "name": "Konrad Odell",
-    "url": "https://github.com/konradish"
+    "name": "Konrad Odell"
   },
   "plugins": [
     {
       "name": "hive",
-      "source": {
-        "source": "local",
-        "path": "."
-      },
-      "description": "Multi-instance Claude Code orchestration for parallel work across projects"
+      "source": ".",
+      "description": "Multi-instance Claude Code orchestration for parallel work across projects",
+      "version": "1.0.0"
     }
   ]
 }
