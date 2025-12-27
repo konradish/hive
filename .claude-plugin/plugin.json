@@ -2,7 +2,9 @@
   "name": "hive",
   "version": "1.0.0",
   "description": "Multi-instance Claude Code orchestration for parallel work across projects",
-  "author": "Konrad Odell",
+  "author": {
+    "name": "Konrad Odell"
+  },
   "license": "MIT",
   "repository": "https://github.com/konradish/hive",
   "keywords": ["orchestration", "parallel", "workers", "multi-instance"]
