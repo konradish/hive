@@ -38,12 +38,12 @@ fi
 mkdir -p "$SKILL_DIR"
 
 # Copy skill files
-if [[ -d "$SCRIPT_DIR/skill" ]]; then
+if [[ -d "$SCRIPT_DIR/skills/hive" ]]; then
     echo "Copying skill files from local repo..."
-    cp "$SCRIPT_DIR/skill/"* "$SKILL_DIR/"
+    cp "$SCRIPT_DIR/skills/hive/"* "$SKILL_DIR/"
 else
     echo "Downloading skill files..."
-    REPO_URL="https://raw.githubusercontent.com/konradish/hive/main/skill"
+    REPO_URL="https://raw.githubusercontent.com/konradish/hive/main/skills/hive"
     for file in SKILL.md PROTOCOL.md worker-prompt.md spawn.sh status.sh monitor.sh cleanup.sh setup.sh; do
         curl -sSL "$REPO_URL/$file" -o "$SKILL_DIR/$file"
     done

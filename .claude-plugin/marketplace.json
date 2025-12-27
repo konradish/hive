@@ -1,0 +1,17 @@
+{
+  "name": "hive-marketplace",
+  "owner": {
+    "name": "Konrad Odell",
+    "url": "https://github.com/konradish"
+  },
+  "plugins": [
+    {
+      "name": "hive",
+      "source": {
+        "source": "local",
+        "path": "."
+      },
+      "description": "Multi-instance Claude Code orchestration for parallel work across projects"
+    }
+  ]
+}

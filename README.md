@@ -48,31 +48,39 @@ orchestrator (your notes repo)
 
 ## Installation
 
-### Option 1: Install Skill Only (Recommended)
+### Install via Plugin System (Recommended)
 
-Copy the skill to your Claude Code skills directory:
+Install hive as a Claude Code plugin:
+
+```bash
+# Add the hive marketplace
+/plugin marketplace add https://github.com/konradish/hive
+
+# Install the plugin
+/plugin install hive
+```
+
+After installation, the skill will be available and Claude will automatically activate it when you mention "hive", "spawn workers", "parallel work", etc.
+
+### Manual Installation (Alternative)
+
+If you prefer manual installation:
 
 ```bash
 # Clone the repo
 git clone https://github.com/konradish/hive.git /tmp/hive
 
-# Copy skill files
+# Copy skill files to your global skills directory
 mkdir -p ~/.claude/skills/hive
-cp /tmp/hive/skill/* ~/.claude/skills/hive/
+cp /tmp/hive/skills/hive/* ~/.claude/skills/hive/
 
 # Make scripts executable
 chmod +x ~/.claude/skills/hive/*.sh
 ```
 
-### Option 2: Use Install Script
-
-```bash
-curl -sSL https://raw.githubusercontent.com/konradish/hive/main/install.sh | bash
-```
-
 ### Setup Your Orchestration Directory
 
-In your notes/orchestration repo:
+In your notes/orchestration repo, initialize the .hive directory:
 
 ```bash
 # Initialize .hive directory
@@ -218,22 +226,26 @@ See `examples/claude-md-snippet.md` for the full snippet.
 
 ```
 hive/
-├── README.md                    # This file
-├── install.sh                   # Installation script
-├── skill/
-│   ├── SKILL.md                 # Main orchestration instructions
-│   ├── PROTOCOL.md              # Detailed status.json protocol
-│   ├── worker-prompt.md         # Template for worker instructions
-│   ├── spawn.sh                 # Spawn a single worker
-│   ├── status.sh                # Check worker statuses
-│   ├── monitor.sh               # Real-time monitoring
-│   ├── cleanup.sh               # Archive/delete workers
-│   └── setup.sh                 # Initialize .hive directory
+├── .claude-plugin/
+│   ├── plugin.json              # Plugin manifest
+│   └── marketplace.json         # Marketplace definition
+├── skills/
+│   └── hive/
+│       ├── SKILL.md             # Main orchestration instructions
+│       ├── PROTOCOL.md          # Detailed status.json protocol
+│       ├── worker-prompt.md     # Template for worker instructions
+│       ├── spawn.sh             # Spawn a single worker
+│       ├── status.sh            # Check worker statuses
+│       ├── monitor.sh           # Real-time monitoring
+│       ├── cleanup.sh           # Archive/delete workers
+│       └── setup.sh             # Initialize .hive directory
 ├── docs/
 │   └── automation-patterns.md   # Advanced patterns
-└── examples/
-    ├── projects.json            # Example project registry
-    └── claude-md-snippet.md     # CLAUDE.md addition
+├── examples/
+│   ├── projects.json            # Example project registry
+│   └── claude-md-snippet.md     # CLAUDE.md addition
+├── install.sh                   # Manual installation script
+└── README.md                    # This file
 ```
 
 ## Related
