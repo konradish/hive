@@ -1,0 +1,7 @@
+{
+  "my-app": "/path/to/my-app",
+  "my-api": "/path/to/my-api",
+  "frontend": "/path/to/frontend",
+  "infra": "/path/to/infra",
+  "notes": "/path/to/notes"
+}
