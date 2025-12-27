@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "hive",
-      "source": ".",
+      "source": "./",
       "description": "Multi-instance Claude Code orchestration for parallel work across projects",
       "version": "1.0.0"
     }
