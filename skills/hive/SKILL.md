@@ -40,6 +40,47 @@ Use this skill when user says:
 - "Use hive to..."
 - Any request for parallel work across multiple projects
 
+## Critical Safety Rule
+
+**The orchestrator NEVER directly SSH's, edits files, or runs commands in other repos.**
+
+Always spawn a hive worker. Workers have:
+- Full git history access (can see what changed)
+- Project CLAUDE.md (knows deployment patterns)
+- Local context (understands the architecture)
+
+The orchestrator lacks this context. Direct action leads to confident-but-wrong changes.
+
+## Pre-Flight Checklist
+
+Before spawning workers for deployment/infrastructure tasks:
+
+| Step | Action | Why |
+|------|--------|-----|
+| 1 | Read `.hive/projects.json` | Verify project path exists |
+| 2 | Check task specifies environment | Dev vs prod matters |
+| 3 | If debugging, include recent context | "Check git log first" |
+| 4 | Load relevant learnings | Inject past lessons |
+
+**For deployment workers, always include in task:**
+```
+ENVIRONMENT: [dev/prod] - confirm before making changes
+VERIFICATION: [how to test the fix worked]
+```
+
+## Parallel Safety Matrix
+
+| Task Type | Parallel Safe? | Reason |
+|-----------|----------------|--------|
+| Code analysis / audits | YES | Read-only |
+| Feature dev in different apps | YES | Separate repos |
+| Documentation updates | YES | No shared state |
+| Deployment to SAME server | NO | Container conflicts |
+| Database migrations | NO | Schema dependencies |
+| Infrastructure changes | NO | Shared resources |
+
+**Rule:** If tasks touch the same server/database/service, run sequentially.
+
 ## Spawning Workers
 
 ### 1. Setup Worker Directory

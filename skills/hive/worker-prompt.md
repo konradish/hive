@@ -88,6 +88,41 @@ If you notice context compression happening or feel limited:
 ```
 The orchestrator will park your session and spawn a fresh worker to continue.
 
+## Safety Rules
+
+### Dev-First Enforcement
+**BEFORE making any changes that affect running systems:**
+1. ASK: "Is this targeting dev or prod?"
+2. DEFAULT: Fix dev first, verify it works, then apply to prod
+3. NEVER: Apply migrations, restart containers, push to prod, or modify production configs without EXPLICIT approval from the orchestrator
+
+If the task doesn't specify environment, write `need_input`:
+```json
+{
+  "status": "need_input",
+  "question": "Should I fix this in dev first, or go directly to prod?",
+  "options": ["Dev first (recommended)", "Prod directly (I have approval)"]
+}
+```
+
+### Investigation-First Pattern
+**When debugging or fixing "what broke":**
+1. Check `git log` for recent changes - what changed?
+2. Compare working vs broken configs/code
+3. Read container/application logs
+4. Test endpoints directly with curl
+5. THEN propose a fix
+
+**Anti-pattern:** Confidently fixing based on memory or assumption. The orchestrator lacks your project context - that's why YOU were spawned. Use git history.
+
+### HTK Workflow (Hypothesis-Test-Knowledge)
+Work with **WIP=1** - no chained speculative changes:
+1. Hypothesis: "Changing X will fix Y"
+2. Test: Run the verification command
+3. Knowledge: Did it work? If yes, commit. If no, revert and try next hypothesis.
+
+**Never:** Stack multiple untested changes hoping they all work.
+
 ## Important Rules
 
 1. **Always write status.json** before stopping or when status changes
@@ -95,14 +130,19 @@ The orchestrator will park your session and spawn a fresh worker to continue.
 3. **Be specific** in questions - the orchestrator has limited context about your work
 4. **Include options** when asking questions to speed up decisions
 5. **Track progress** so work can continue if you're parked
+6. **Read project CLAUDE.md first** - it contains deployment patterns and gotchas
+7. **Check git history** before assuming what's wrong
 
 ## Additional Context
 {{CONTEXT}}
 
 ---
 
-Now begin your task. Start by understanding the codebase, then proceed with the work.
-Write an initial "working" status, then get started.
+Now begin your task:
+1. Write initial "working" status
+2. Read the project's CLAUDE.md if it exists
+3. If debugging, check git log first
+4. Then proceed with the work
 ```
 
 ---

@@ -1,0 +1,78 @@
+# Infrastructure Reference Template
+# Copy to .hive/infrastructure-reference.yaml and customize for your setup
+# Workers can reference this for quick infrastructure lookups
+
+# Server inventory
+servers:
+  production:
+    host: "your-prod-server.example.com"
+    ip: "xxx.xxx.xxx.xxx"
+    ssh_user: "apps"
+    stack_path: "/opt/stack"
+    notes: "Primary production server"
+
+  staging:
+    host: "your-staging-server.example.com"
+    ip: "xxx.xxx.xxx.xxx"
+    ssh_user: "apps"
+    stack_path: "/opt/stack"
+    notes: "Staging environment"
+
+# Cloudflare Tunnel references (if applicable)
+# IMPORTANT: Dashboard is source of truth, this is for quick lookup
+tunnels:
+  app-name:
+    tunnel_id: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    hostname: "app.example.com"
+    origin: "http://traefik:80"
+    notes: "Main application tunnel"
+
+# Routing patterns
+routing:
+  dev_prefix: "dev."  # dev.app.example.com -> dev container
+  traefik_network: "traefik-network"
+  pattern: "Host header routing via Traefik labels"
+
+# Database connection formats
+databases:
+  async_format: "postgresql+asyncpg://user:pass@host:5432/db"
+  sync_format: "postgresql://user:pass@host:5432/db"
+  notes: "SQLAlchemy async requires asyncpg:// format"
+
+# Redis isolation (if using db numbers)
+redis:
+  db_0: "app-a-prod"
+  db_1: "app-a-dev"
+  db_2: "app-b-prod"
+  db_3: "app-b-dev"
+  notes: "Use DB numbers for cheap multi-service isolation"
+
+# Container naming conventions
+containers:
+  pattern: "{app}-{env}"  # e.g., myapp-prod, myapp-dev
+  traefik_label: "traefik.http.routers.{app}-{env}.rule=Host(`{hostname}`)"
+
+# Common gotchas (from past incidents)
+gotchas:
+  - issue: "Tunnel ID mismatch"
+    symptom: "502 Bad Gateway"
+    fix: "Verify tunnel ID in Cloudflare Dashboard matches config"
+
+  - issue: "OAuth redirect mismatch"
+    symptom: "OAuth callback fails"
+    fix: "GOOGLE_REDIRECT_URI must exactly match frontend URL"
+
+  - issue: "Container name resolution"
+    symptom: "No such host: traefik"
+    fix: "Add network aliases when cloudflared references different container name"
+
+  - issue: "SSH tunnel binding"
+    symptom: "Connection refused from Docker"
+    fix: "Bind to 0.0.0.0, not 127.0.0.1, for Docker container access"
+
+# Verification commands
+verification:
+  tunnel_status: "cloudflared tunnel list"
+  container_logs: "docker logs {container} --tail 100"
+  traefik_routes: "curl -s http://localhost:8080/api/http/routers | jq"
+  db_connection: "docker exec {db_container} psql -U {user} -c 'SELECT 1'"
