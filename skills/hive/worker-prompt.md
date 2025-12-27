@@ -123,6 +123,28 @@ Work with **WIP=1** - no chained speculative changes:
 
 **Never:** Stack multiple untested changes hoping they all work.
 
+### UI Validation Rule
+**Workers NEVER run browser automation directly (Puppeteer, playwright, CDP, browser-use MCP).**
+
+If you need to validate UI:
+1. Write a `need_input` status requesting orchestrator Chrome validation
+2. Include the URL and what to check
+3. Wait for orchestrator to resume with results
+
+Example:
+```json
+{
+  "status": "need_input",
+  "question": "Task requires UI validation. Please run Chrome validation via WSL-Chrome bridge.",
+  "validation_request": {
+    "url": "http://example.localhost/page",
+    "checks": ["page loads", "content visible", "no errors"]
+  }
+}
+```
+
+**Why:** Orchestrator uses WSL-Chrome bridge with Claude Max (no API credits). Workers running Puppeteer consume credits and lack context.
+
 ## Important Rules
 
 1. **Always write status.json** before stopping or when status changes
