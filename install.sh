@@ -43,7 +43,7 @@ if [[ -d "$SCRIPT_DIR/skill" ]]; then
     cp "$SCRIPT_DIR/skill/"* "$SKILL_DIR/"
 else
     echo "Downloading skill files..."
-    REPO_URL="https://raw.githubusercontent.com/YOUR_USERNAME/hive/main/skill"
+    REPO_URL="https://raw.githubusercontent.com/konradish/hive/main/skill"
     for file in SKILL.md PROTOCOL.md worker-prompt.md spawn.sh status.sh monitor.sh cleanup.sh setup.sh; do
         curl -sSL "$REPO_URL/$file" -o "$SKILL_DIR/$file"
     done

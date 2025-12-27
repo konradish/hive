@@ -54,7 +54,7 @@ Copy the skill to your Claude Code skills directory:
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/hive.git /tmp/hive
+git clone https://github.com/konradish/hive.git /tmp/hive
 
 # Copy skill files
 mkdir -p ~/.claude/skills/hive
@@ -67,7 +67,7 @@ chmod +x ~/.claude/skills/hive/*.sh
 ### Option 2: Use Install Script
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/hive/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/konradish/hive/main/install.sh | bash
 ```
 
 ### Setup Your Orchestration Directory
