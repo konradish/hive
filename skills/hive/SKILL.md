@@ -40,7 +40,9 @@ Use this skill when user says:
 - "Use hive to..."
 - Any request for parallel work across multiple projects
 
-## Critical Safety Rule
+## Critical Safety Rules
+
+### Rule 1: Orchestrator NEVER Does The Work
 
 **The orchestrator NEVER directly SSH's, edits files, or runs commands in other repos.**
 
@@ -50,6 +52,30 @@ Always spawn a hive worker. Workers have:
 - Local context (understands the architecture)
 
 The orchestrator lacks this context. Direct action leads to confident-but-wrong changes.
+
+### Rule 2: PowerShell Orchestrator NEVER Runs Build Commands
+
+**When in PowerShell context, NEVER run these commands directly:**
+
+| Category | Prohibited Commands |
+|----------|---------------------|
+| **Node.js** | `npm`, `npx`, `yarn`, `pnpm`, `node` (except version checks) |
+| **Python** | `pip`, `python`, `uv`, `poetry` |
+| **Build** | `make`, `cmake`, `cargo`, `go build` |
+| **Package managers** | Any package install/update/build command |
+
+**Why:** PowerShell npm installs Windows-native binaries. WSL expects Linux binaries. Running `npm install` from PowerShell corrupts `node_modules` for all WSL builds.
+
+**Always delegate to a WSL worker:**
+```bash
+# WRONG - from PowerShell orchestrator
+cd /c/projects/meal_tracker/frontend && npm install
+
+# RIGHT - spawn worker in WSL
+wsl.exe -d Debian -- zsh -ilc 'unset ANTHROPIC_API_KEY && cd /mnt/c/projects/meal_tracker && claude -p "Run npm install" --dangerously-skip-permissions'
+```
+
+**Recovery if violated:** Worker must run `rm -rf node_modules package-lock.json && npm install` from WSL.
 
 ## Pre-Flight Checklist
 
@@ -87,7 +113,7 @@ The orchestrator may run in two environments with different capabilities:
 
 | Context | Detection | Worker Spawn | Chrome Access |
 |---------|-----------|--------------|---------------|
-| **PowerShell/Windows** | Bash tool uses `/c/` paths | `wsl.exe -d Debian -- bash -ilc '...'` | Native MCP (~2s) |
+| **PowerShell/Windows** | Bash tool uses `/c/` paths | `wsl.exe -d Debian -- zsh -ilc '...'` | Native MCP (~2s) |
 | **WSL** | Bash tool uses `/mnt/c/` or `/home/` paths | Direct `claude` spawn | WSL-Chrome bridge (~20s) |
 
 ### Why This Matters
@@ -166,20 +192,26 @@ When running from PowerShell/Windows, spawn workers in WSL via:
 ```bash
 # Critical flags:
 # -d Debian → Target correct WSL distro
-# bash -ilc → Interactive login shell (loads PATH with claude at ~/.local/bin)
+# zsh -ilc → Interactive login shell (loads full environment including credentials)
+# unset ANTHROPIC_API_KEY → Use Claude Max subscription, not API credits
 # /mnt/c/ paths → Required for WSL filesystem access
 
 WORKER_UUID=$(uuidgen)
 PROJECT_PATH="/mnt/c/projects/myproject"  # Note: /mnt/c not /c
 STATUS_FILE="/mnt/c/ObsidianNotes/.hive/workers/${PROJECT}-${WORKER_UUID}/status.json"
 
-wsl.exe -d Debian -- bash -ilc "
+wsl.exe -d Debian -- zsh -ilc "
+  unset ANTHROPIC_API_KEY && \
   cd $PROJECT_PATH && \
   claude -p '<worker-prompt with variables>' \
     --session-id $WORKER_UUID \
     --dangerously-skip-permissions
 " 2>&1 > "$WORKER_DIR/transcript.jsonl" &
 ```
+
+**Why zsh not bash:** Use the user's default shell (zsh) to ensure all environment variables and credentials (e.g., wrangler OAuth, API tokens) are loaded from `.zshrc`/`.zprofile`.
+
+**Why unset API key:** If `ANTHROPIC_API_KEY` is set in the environment, Claude uses API credits instead of Claude Max subscription. Unsetting it ensures workers use the subscription.
 
 **Path translation:** When in PowerShell context, convert `/c/` → `/mnt/c/` for any paths passed to WSL.
 
