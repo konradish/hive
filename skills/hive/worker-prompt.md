@@ -135,7 +135,7 @@ Example:
 ```json
 {
   "status": "need_input",
-  "question": "Task requires UI validation. Please run Chrome validation via WSL-Chrome bridge.",
+  "question": "Task requires UI validation.",
   "validation_request": {
     "url": "http://example.localhost/page",
     "checks": ["page loads", "content visible", "no errors"]
@@ -143,7 +143,7 @@ Example:
 }
 ```
 
-**Why:** Orchestrator uses WSL-Chrome bridge with Claude Max (no API credits). Workers running Puppeteer consume credits and lack context.
+**Why:** The orchestrator handles Chrome access using the optimal method for its context (native MCP or WSL-Chrome bridge). Workers running Puppeteer consume API credits and lack the orchestrator's Chrome integration.
 
 ## Important Rules
 

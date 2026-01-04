@@ -81,6 +81,31 @@ VERIFICATION: [how to test the fix worked]
 
 **Rule:** If tasks touch the same server/database/service, run sequentially.
 
+## Orchestrator Context Detection
+
+The orchestrator may run in two environments with different capabilities:
+
+| Context | Detection | Worker Spawn | Chrome Access |
+|---------|-----------|--------------|---------------|
+| **PowerShell/Windows** | Bash tool uses `/c/` paths | `wsl.exe -d Debian -- bash -ilc '...'` | Native MCP (~2s) |
+| **WSL** | Bash tool uses `/mnt/c/` or `/home/` paths | Direct `claude` spawn | WSL-Chrome bridge (~20s) |
+
+### Why This Matters
+
+- **PowerShell orchestrator** has native Chrome MCP access - no bridge overhead
+- **WSL orchestrator** must use WSL-Chrome bridge for UI validation (spawns 2nd Claude)
+- **PowerShell is superior for UI-heavy workflows** (QA, testing, forms)
+
+### Context Detection Logic
+
+Check your Bash tool's working directory:
+```bash
+pwd
+# /c/ObsidianNotes → PowerShell context (Git Bash)
+# /mnt/c/ObsidianNotes → WSL context
+# /home/kodell/... → WSL context
+```
+
 ## Spawning Workers
 
 ### 1. Setup Worker Directory
@@ -110,6 +135,8 @@ Read from `.hive/projects.json`:
 
 **IMPORTANT**: Always generate a FRESH UUID for each spawn. Never reuse session IDs.
 
+#### WSL Orchestrator (Direct Spawn)
+
 ```bash
 # Generate fresh UUID - MUST be new each time
 WORKER_UUID=$(uuidgen)
@@ -131,6 +158,30 @@ PROMPT
   --dangerously-skip-permissions \
   2>&1 > "$WORKER_DIR/transcript.jsonl" &
 ```
+
+#### PowerShell Orchestrator (WSL Bridge Spawn)
+
+When running from PowerShell/Windows, spawn workers in WSL via:
+
+```bash
+# Critical flags:
+# -d Debian → Target correct WSL distro
+# bash -ilc → Interactive login shell (loads PATH with claude at ~/.local/bin)
+# /mnt/c/ paths → Required for WSL filesystem access
+
+WORKER_UUID=$(uuidgen)
+PROJECT_PATH="/mnt/c/projects/myproject"  # Note: /mnt/c not /c
+STATUS_FILE="/mnt/c/ObsidianNotes/.hive/workers/${PROJECT}-${WORKER_UUID}/status.json"
+
+wsl.exe -d Debian -- bash -ilc "
+  cd $PROJECT_PATH && \
+  claude -p '<worker-prompt with variables>' \
+    --session-id $WORKER_UUID \
+    --dangerously-skip-permissions
+" 2>&1 > "$WORKER_DIR/transcript.jsonl" &
+```
+
+**Path translation:** When in PowerShell context, convert `/c/` → `/mnt/c/` for any paths passed to WSL.
 
 **Note**: `--output-format stream-json --verbose` captures the full conversation including every tool call. This is essential for debugging and learning from worker behavior.
 
