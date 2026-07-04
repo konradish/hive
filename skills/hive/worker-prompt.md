@@ -53,7 +53,7 @@ Then **STOP working and exit**. The orchestrator will resume you with an answer.
    - Key decisions and reasoning
    - Files changed (with brief explanation)
    - Learnings/observations
-3. If you made code changes, commit them with a descriptive message
+3. If you made code changes, commit them with a descriptive message AND the orchestrator trailer block (see "Commit Trailer Contract" below). Commits MUST stay on your current working branch — do NOT push, do NOT merge to main/prod/master. The orchestrator handles the merge-to-dev + push.
 4. Then write the done status
 
 ```json
@@ -63,9 +63,39 @@ Then **STOP working and exit**. The orchestrator will resume you with an answer.
   "files_changed": ["list", "of", "files"],
   "committed": true,
   "parked": true,
+  "commit_hash": "<short-sha>",
   "notes": "Any follow-up items or observations"
 }
 ```
+
+### Commit Trailer Contract (REQUIRED when `committed: true`)
+
+Every commit you produce MUST end with this trailer block, separated from the body by one blank line:
+
+```
+Orchestrator-Item: {{WORKER_ID}}
+Rollback: git revert <hash>
+Verifier-Skill-Ref: 0000000
+Iterations: 1
+Worker-Model: claude-sonnet-4-6
+Pivot-Used: none
+```
+
+Rules:
+- Use the literal token `<hash>` in the `Rollback:` line. The orchestrator rewrites it to your commit's real short SHA after merge via `--amend`. Do NOT try to compute your own hash.
+- `Orchestrator-Item` = your `{{WORKER_ID}}` unless the task provides a different `item_id`.
+- `Verifier-Skill-Ref` = `0000000` when no verifier ran; the orchestrator overwrites this in the amend step if a verifier did run.
+- `Iterations: 1` — you are always iteration 1 from a worker's perspective. The orchestrator may amend to a higher number if this commit lands in a retry.
+- `Worker-Model` = the model you're running on. If unknown, write `claude-sonnet-4-6`.
+- `Pivot-Used: none` — workers do not pivot; orchestrator amends if the winning attempt ran under a pivot directive.
+
+Full contract: `{{VAULT}}/.hive/commit-trailer-contract.md` (read this if the task spec is ambiguous).
+
+### Branch discipline
+
+- Stay on the branch you were spawned on. Commits land there; the orchestrator handles merge + push.
+- Do NOT run `git push`. Do NOT run `git checkout main/prod/master`. Do NOT run `git merge`.
+- If the branch is dirty from a prior attempt, `git status` first and surface via `need_input` rather than guessing.
 
 ### When You Encounter an Error
 ```json
